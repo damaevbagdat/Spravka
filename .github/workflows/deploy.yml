@@ -1,0 +1,35 @@
+name: Deploy to kir-ito.ru
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy to Production Server
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 194.32.142.237
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/certificates-generator
+            bash deploy.sh
+
+      - name: Send deployment notification
+        if: always()
+        run: |
+          if [ ${{ job.status }} == 'success' ]; then
+            echo "✅ Deployment to kir-ito.ru completed successfully!"
+          else
+            echo "❌ Deployment to kir-ito.ru failed!"
+            exit 1
+          fi
