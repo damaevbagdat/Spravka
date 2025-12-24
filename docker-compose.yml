@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  webapp:
+    build:
+      context: .
+      dockerfile: webapp/Dockerfile
+    container_name: swisscapital-certificates
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./webapp/uploads:/app/uploads
+      - ./webapp/generated:/app/generated
+      - ./scripts/num2text.py:/app/num2text.py:ro
+    environment:
+      - TZ=Asia/Almaty
+    restart: unless-stopped
+
+  # Опционально: nginx как reverse proxy
+  nginx:
+    image: nginx:alpine
+    container_name: swisscapital-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - webapp
+    restart: unless-stopped
+    profiles:
+      - production

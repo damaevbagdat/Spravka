@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>SwissCapital - Генератор справок</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .logo-red { color: #dc2626; }
+        .logo-black { color: #000; }
+        .drop-zone {
+            border: 2px dashed #cbd5e1;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.dragover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-2">
+                <h1 class="text-2xl font-bold">
+                    <span class="logo-red">swiss</span><span class="logo-black">capital</span>
+                </h1>
+                <span class="text-gray-400 text-sm ml-4">Генератор справок</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <span class="text-gray-600">{{ username }}</span>
+                <a href="/" class="text-gray-500 hover:text-gray-700"
+                   onclick="if(confirm('Выйти из системы?')) { window.location.href='/?logout=1'; }">
+                    Выйти
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Step 1: Settings (always visible) -->
+        <section id="step-settings" class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">1</span>
+                Настройки справки
+            </h2>
+
+            <div class="grid md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <span class="text-red-500">*</span> По состоянию на
+                    </label>
+                    <input type="date" id="reportDate"
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
+                        <span class="text-red-500">*</span> Подписант (Фамилия И.О.)
+                    </label>
+                    <input type="text" id="managerName" value="Койбасова Е.Б." placeholder="Иванов И.И."
+                           class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Формат выгрузки</label>
+                    <select id="formatType" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="both">Excel + PDF</option>
+                        <option value="excel">Только Excel</option>
+                        <option value="pdf">Только PDF</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 2: Upload -->
+        <section id="step-upload" class="bg-white rounded-xl shadow-sm p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">2</span>
+                Загрузка данных
+            </h2>
+
+            <div id="dropZone" class="drop-zone rounded-xl p-12 text-center cursor-pointer hover:bg-gray-50">
+                <input type="file" id="fileInput" accept=".xlsx,.xls" class="hidden">
+                <div class="text-gray-400 mb-4">
+                    <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                              d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                    </svg>
+                </div>
+                <p class="text-gray-600 font-medium">Перетащите Excel файл сюда</p>
+                <p class="text-gray-400 text-sm mt-1">или нажмите для выбора файла</p>
+                <p class="text-gray-400 text-xs mt-4">Поддерживаемые форматы: .xlsx, .xls</p>
+                <a href="/download-template" class="inline-block mt-3 text-blue-500 hover:text-blue-700 text-sm underline">
+                    Скачать шаблон Excel
+                </a>
+            </div>
+
+            <div id="fileInfo" class="hidden mt-4 p-4 bg-green-50 rounded-lg border border-green-200">
+                <div class="flex items-center gap-3">
+                    <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="font-medium text-green-800" id="fileName"></p>
+                        <p class="text-sm text-green-600" id="clientsCount"></p>
+                        <details class="mt-2">
+                            <summary class="text-sm text-blue-600 cursor-pointer hover:text-blue-800">
+                                Показать найденные столбцы Excel
+                            </summary>
+                            <div id="columnMapping" class="mt-2 text-xs bg-white p-3 rounded border border-green-300">
+                                <!-- Столбцы будут добавлены через JavaScript -->
+                            </div>
+                        </details>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Step 3: Edit Data -->
+        <section id="step-data" class="bg-white rounded-xl shadow-sm p-6 mb-6 hidden">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
+                Данные клиентов
+                <span class="text-gray-400 text-sm font-normal ml-2">(можно редактировать)</span>
+            </h2>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-xs" id="clientsTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-1 py-2 text-left">№</th>
+                            <th class="px-2 py-2 text-left">Договор</th>
+                            <th class="px-2 py-2 text-left">Дата</th>
+                            <th class="px-2 py-2 text-left">ФИО</th>
+                            <th class="px-2 py-2 text-right">ОД</th>
+                            <th class="px-2 py-2 text-right">Возн.</th>
+                            <th class="px-2 py-2 text-right">Отср.</th>
+                            <th class="px-2 py-2 text-right">Пени/Штрафы</th>
+                            <th class="px-2 py-2 text-right">Админ.сборы</th>
+                            <th class="px-3 py-2 text-right font-semibold">ИТОГО</th>
+                            <th class="px-3 py-2 text-center">Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clientsBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Step 4: Generate -->
+        <section id="step-generate" class="bg-white rounded-xl shadow-sm p-6 mb-6 hidden">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold">Готово к генерации</h2>
+                    <p class="text-gray-500 text-sm" id="summaryText"></p>
+                </div>
+                <button id="generateBtn" onclick="generateCertificates()"
+                        class="px-6 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600
+                               transition-colors flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Сгенерировать справки
+                </button>
+            </div>
+        </section>
+
+        <!-- Step 5: Download -->
+        <section id="step-download" class="bg-white rounded-xl shadow-sm p-6 mb-6 hidden fade-in">
+            <div class="text-center py-6">
+                <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <h2 class="text-xl font-semibold text-gray-800 mb-2">Справки готовы!</h2>
+                <p class="text-gray-500 mb-6" id="resultCount"></p>
+
+                <div class="flex justify-center gap-4" id="downloadButtons"></div>
+            </div>
+        </section>
+
+        <!-- History -->
+        <section class="bg-white rounded-xl shadow-sm p-6">
+            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                История генераций
+            </h2>
+
+            <div id="historyList">
+                {% if history %}
+                <div class="space-y-2">
+                    {% for item in history %}
+                    <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                            <p class="font-medium">{{ item.date }} — {{ item.clients_count }} справок</p>
+                            <p class="text-sm text-gray-500">{{ item.report_date }}, {{ item.manager }}</p>
+                        </div>
+                        <div class="flex gap-2">
+                            {% if 'excel' in item.archives %}
+                            <a href="{{ item.archives.excel }}" class="px-3 py-1 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200">
+                                Excel
+                            </a>
+                            {% endif %}
+                            {% if 'pdf' in item.archives %}
+                            <a href="{{ item.archives.pdf }}" class="px-3 py-1 bg-red-100 text-red-700 rounded text-sm hover:bg-red-200">
+                                PDF
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-gray-400 text-center py-8">История пуста</p>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+
+    <!-- Preview Modal -->
+    <div id="previewModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl max-w-5xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Предпросмотр справки</h3>
+                    <button onclick="closePreview()" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                <div id="previewContent" class="border rounded-lg p-6"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white bg-opacity-90 hidden items-center justify-center z-50">
+        <div class="text-center">
+            <div class="spinner mx-auto mb-4"></div>
+            <p class="text-gray-600" id="loadingText">Обработка...</p>
+        </div>
+    </div>
+
+    <script>
+        let currentSessionId = null;
+        let clientsData = [];
+
+        // Установка текущей даты по умолчанию
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('reportDate').value = today;
+        });
+
+        // Функция форматирования даты YYYY-MM-DD -> DD.MM.YYYY
+        function formatDateForServer(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return `${parts[2]}.${parts[1]}.${parts[0]}`;
+            }
+            return dateStr;
+        }
+
+        // Drag & Drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length) handleFile(files[0]);
+        });
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length) handleFile(e.target.files[0]);
+        });
+
+        async function handleFile(file) {
+            if (!file.name.match(/\.(xlsx|xls)$/i)) {
+                alert('Пожалуйста, загрузите Excel файл (.xlsx или .xls)');
+                return;
+            }
+
+            showLoading('Загрузка файла...');
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Ошибка загрузки');
+                }
+
+                const data = await response.json();
+                currentSessionId = data.session_id;
+                clientsData = data.clients;
+
+                document.getElementById('fileName').textContent = data.filename;
+                document.getElementById('clientsCount').textContent = `Найдено клиентов: ${data.clients_count}`;
+                document.getElementById('fileInfo').classList.remove('hidden');
+
+                // Отображаем найденные столбцы Excel
+                if (data.column_mapping && data.column_mapping.found_columns) {
+                    const columnList = data.column_mapping.found_columns
+                        .map(col => `<span class="inline-block bg-gray-100 px-2 py-1 rounded mr-2 mb-1">${col}</span>`)
+                        .join('');
+                    document.getElementById('columnMapping').innerHTML = `
+                        <p class="font-medium mb-2">Найдено столбцов: ${data.column_mapping.total_columns}</p>
+                        <div class="flex flex-wrap">${columnList}</div>
+                        <p class="mt-3 text-gray-600">
+                            <strong>Соответствие:</strong><br>
+                            • "Пеня за ОД" + "Пеня за вознаграждение" → <strong>Пени/Штрафы</strong><br>
+                            • "Гос.пошлина" → <strong>Админ.сборы</strong>
+                        </p>
+                    `;
+                }
+
+                renderClientsTable();
+
+                document.getElementById('step-data').classList.remove('hidden');
+                document.getElementById('step-generate').classList.remove('hidden');
+
+                updateSummary();
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function renderClientsTable() {
+            const tbody = document.getElementById('clientsBody');
+            tbody.innerHTML = clientsData.map((client, index) => `
+                <tr class="border-t hover:bg-gray-50">
+                    <td class="px-3 py-2">${client.id}</td>
+                    <td class="px-3 py-2">${client.contract_number}</td>
+                    <td class="px-3 py-2">${client.contract_date}</td>
+                    <td class="px-3 py-2">${client.client_name}</td>
+                    <td class="px-3 py-2 text-right">${formatNumber(client.principal)}</td>
+                    <td class="px-3 py-2 text-right">${formatNumber(client.reward)}</td>
+                    <td class="px-3 py-2 text-right">${formatNumber(client.deferred_interest)}</td>
+                    <td class="px-3 py-2 text-right">${formatNumber(client.penalties)}</td>
+                    <td class="px-3 py-2 text-right">${formatNumber(client.admin_fees)}</td>
+                    <td class="px-3 py-2 text-right font-medium">${formatNumber(client.total)}</td>
+                    <td class="px-3 py-2 text-center">
+                        <button onclick="previewCertificate(${client.id})"
+                                class="text-blue-500 hover:text-blue-700 mr-2" title="Предпросмотр">
+                            <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('ru-RU');
+        }
+
+        function updateSummary() {
+            const count = clientsData.length;
+            const format = document.getElementById('formatType').value;
+            const formatText = {
+                'both': 'Excel и PDF',
+                'excel': 'Excel',
+                'pdf': 'PDF'
+            }[format];
+
+            document.getElementById('summaryText').textContent =
+                `${count} справок в формате ${formatText}`;
+        }
+
+        document.getElementById('formatType').addEventListener('change', updateSummary);
+
+        async function previewCertificate(clientId) {
+            const reportDateRaw = document.getElementById('reportDate').value;
+            const reportDate = formatDateForServer(reportDateRaw);
+            const manager = document.getElementById('managerName').value;
+
+            showLoading('Загрузка предпросмотра...');
+
+            try {
+                const response = await fetch(
+                    `/preview/${currentSessionId}/${clientId}?report_date=${encodeURIComponent(reportDate)}&manager=${encodeURIComponent(manager)}`
+                );
+
+                if (!response.ok) throw new Error('Ошибка загрузки');
+
+                const data = await response.json();
+
+                const content = `
+                    <div class="text-center mb-6">
+                        <h1 class="text-xl font-bold">
+                            <span class="text-red-600">swiss</span>capital
+                        </h1>
+                        <p class="text-gray-500 text-sm">${data.company.address1}</p>
+                        <p class="text-gray-500 text-sm">${data.company.address2}</p>
+                    </div>
+                    <h2 class="text-center font-semibold mb-4">Расчет ссудной задолженности</h2>
+                    <p class="mb-4">
+                        По договору займа №${data.contract_number} от ${data.contract_date},
+                        заключенному с ${data.client_name}, по состоянию на ${data.report_date}
+                        ссудная задолженность составляет ${data.total_text} тенге, из них:
+                    </p>
+                    <ul class="space-y-1 mb-6">
+                        ${data.details.map(d => `<li>➤ ${d};</li>`).join('')}
+                    </ul>
+                    <div class="flex justify-between mt-8 pt-4 border-t">
+                        <span>Операционный менеджер</span>
+                        <span>${data.manager}</span>
+                    </div>
+                `;
+
+                document.getElementById('previewContent').innerHTML = content;
+                document.getElementById('previewModal').classList.remove('hidden');
+                document.getElementById('previewModal').classList.add('flex');
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').classList.add('hidden');
+            document.getElementById('previewModal').classList.remove('flex');
+        }
+
+        async function generateCertificates() {
+            const reportDateRaw = document.getElementById('reportDate').value;
+            const reportDate = formatDateForServer(reportDateRaw);
+            const manager = document.getElementById('managerName').value;
+            const format = document.getElementById('formatType').value;
+
+            if (!reportDate || !manager) {
+                alert('Заполните все поля настроек (дата и подписант)');
+                return;
+            }
+
+            showLoading('Генерация справок...');
+
+            const formData = new FormData();
+            formData.append('report_date', reportDate);
+            formData.append('manager', manager);
+            formData.append('format_type', format);
+
+            try {
+                const response = await fetch(`/generate/${currentSessionId}`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) throw new Error('Ошибка генерации');
+
+                const data = await response.json();
+
+                document.getElementById('resultCount').textContent =
+                    `Создано ${data.clients_count} справок`;
+
+                const buttons = [];
+                if (data.archives.excel) {
+                    buttons.push(`
+                        <a href="${data.archives.excel}"
+                           class="px-6 py-3 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600
+                                  flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Скачать Excel (ZIP)
+                        </a>
+                    `);
+                }
+                if (data.archives.pdf) {
+                    buttons.push(`
+                        <a href="${data.archives.pdf}"
+                           class="px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600
+                                  flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                            </svg>
+                            Скачать PDF (ZIP)
+                        </a>
+                    `);
+                }
+
+                document.getElementById('downloadButtons').innerHTML = buttons.join('');
+                document.getElementById('step-download').classList.remove('hidden');
+
+                // Scroll to download section
+                document.getElementById('step-download').scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text;
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            document.getElementById('loadingOverlay').classList.add('flex');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('loadingOverlay').classList.remove('flex');
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closePreview();
+        });
+    </script>
+</body>
+</html>

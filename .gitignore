@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.claude/
+
+# Uploaded files
+webapp/uploads/*
+!webapp/uploads/.gitkeep
+
+# Generated certificates
+webapp/generated/*
+!webapp/generated/.gitkeep
+
+# Test files and outputs
+test_certificate.xlsx
+test_spravka_check.xlsx
+test_fixes.py
+backup-*.tar.gz
+output/
+excel_pure/
+excel_vba/
+
+# Demo and example files
+DEMO_*.xlsx
+Пример.xlsx
+~$*.xlsx
+*.backup
+
+# Screenshots and images (except logo)
+*.jpg
+*.jpeg
+!assetslogo.png
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.local
+
+# SSL certificates (sensitive)
+ssl/
+*.pem
+*.key
+*.crt
+ИТОГОВАЯ_СПРАВКА_ИСПРАВЛЕННАЯ.xlsx
