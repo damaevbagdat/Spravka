@@ -13,8 +13,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Копирование приложения
 COPY . .
 
-# Копирование модуля num2text из scripts
-COPY ../scripts/num2text.py /app/
+# num2text.py будет смонтирован через volume
 
 # Создание директорий
 RUN mkdir -p uploads generated
