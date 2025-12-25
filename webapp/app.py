@@ -894,6 +894,163 @@ async def download_template(username: str = Depends(verify_credentials)):
     )
 
 
+@app.get("/debug-mapping/{session_id}")
+async def debug_mapping(session_id: str, username: str = Depends(verify_credentials)):
+    """Отладка: показать маппинг столбцов Excel"""
+    if session_id not in active_sessions:
+        raise HTTPException(404, "Сессия не найдена")
+
+    file_path = UPLOAD_DIR / f"{session_id}.xlsx"
+    if not file_path.exists():
+        raise HTTPException(404, "Файл не найден")
+
+    # Читаем Excel
+    wb = load_workbook(file_path)
+    ws = wb.active
+
+    # Собираем заголовки
+    headers = {}
+    for col in range(1, ws.max_column + 1):
+        val = ws.cell(row=1, column=col).value
+        if val:
+            headers[str(val).strip()] = col
+
+    # Маппинг (копируем логику из read_excel_data)
+    column_map = {
+        # Номер договора
+        'номер договора': 'contract_number',
+        'номера договора': 'contract_number',
+        '№ договора': 'contract_number',
+        '№ номера договора': 'contract_number',
+        'договор №': 'contract_number',
+        'договор': 'contract_number',
+        # Игнорируем столбец с порядковым номером
+        '№': 'ignore',
+        'п/п': 'ignore',
+        '№ п/п': 'ignore',
+        # Дата договора
+        'дата договора': 'contract_date',
+        'даты договора': 'contract_date',
+        'дата': 'contract_date',
+        # ФИО
+        'фио': 'client_name',
+        'фио клиента': 'client_name',
+        'клиент': 'client_name',
+        'заемщик': 'client_name',
+        # ИИН
+        'иин': 'iin',
+        'иин клиента': 'iin',
+        'iin': 'iin',
+        # Основной долг
+        'основной долг': 'principal',
+        'сумма од': 'principal',
+        'сумма основного долга': 'principal',
+        'од': 'principal',
+        # Вознаграждение (проценты)
+        'вознаграждение': 'reward',
+        'сумма вознаграждения': 'reward',
+        'сумма процентов': 'reward',
+        'проценты': 'reward',
+        # Отсроченные проценты / поступления
+        'отсроченные проценты': 'deferred_interest',
+        'сумма отсроченных процентов': 'deferred_interest',
+        'отсроч проценты': 'deferred_interest',
+        'отсроч. проценты': 'deferred_interest',
+        'отсроченн проценты': 'deferred_interest',
+        'отсроченн. проценты': 'deferred_interest',
+        'отсроченные поступления': 'deferred_interest',
+        'сумма отсроченных поступлений': 'deferred_interest',
+        'отсроч поступления': 'deferred_interest',
+        'отсроч. поступления': 'deferred_interest',
+        'отсроченн поступления': 'deferred_interest',
+        'отсроченн. поступления': 'deferred_interest',
+        'отсроченные поступлений': 'deferred_interest',
+        # Пени, штрафы, неустойки (объединенный столбец)
+        'пени, штрафы, неустойки': 'penalties',
+        'пени штрафы неустойки': 'penalties',
+        'пени': 'penalties',
+        # Старые варианты для обратной совместимости (пеня за ОД)
+        'пеня за од': 'penalty_principal_old',
+        'сумма пеня за од': 'penalty_principal_old',
+        'сумма пени за од': 'penalty_principal_old',
+        'неустойка': 'penalty_principal_old',
+        'штраф': 'penalty_principal_old',
+        # Старые варианты для обратной совместимости (пеня за вознаграждение)
+        'пеня за вознаграждение': 'penalty_reward_old',
+        'сумма пеня за вознаграждение': 'penalty_reward_old',
+        'сумма пени за вознаграждение': 'penalty_reward_old',
+        # Административные сборы (включая гос.пошлину)
+        'административные сборы': 'admin_fees',
+        'адм. сборы': 'admin_fees',
+        'адм сборы': 'admin_fees',
+        # Старые варианты гос.пошлины (теперь часть административных сборов)
+        'гос.пошлина': 'admin_fees',
+        'гос. пошлина': 'admin_fees',
+        'госпошлина': 'admin_fees',
+        'сумма госпошлины': 'admin_fees',
+        # Общая сумма (если есть готовое значение в Excel)
+        'сумма займа': 'total',
+        'общая сумма': 'total',
+        'итого': 'total'
+    }
+
+    # Создаем маппинг (копируем логику из read_excel_data)
+    col_indices = {}
+    mapping_details = []
+
+    headers_lower = {k.lower().strip(): (k, v) for k, v in headers.items()}
+
+    for header_lower, (header_original, col_idx) in headers_lower.items():
+        matched = False
+        match_type = None
+        matched_key = None
+
+        # Точное совпадение
+        if header_lower in column_map:
+            field_name = column_map[header_lower]
+            if field_name != 'ignore' and field_name not in col_indices:
+                col_indices[field_name] = col_idx
+                matched = True
+                match_type = "exact"
+                matched_key = header_lower
+        else:
+            # Частичное совпадение
+            for key, field_name in column_map.items():
+                if key in header_lower or header_lower in key:
+                    if field_name != 'ignore' and field_name not in col_indices:
+                        col_indices[field_name] = col_idx
+                        matched = True
+                        match_type = "partial"
+                        matched_key = key
+                    break
+
+        # Получаем значение из второй строки (первая строка данных)
+        sample_value = ws.cell(row=2, column=col_idx).value if ws.max_row >= 2 else None
+
+        mapping_details.append({
+            "column_index": col_idx,
+            "header_original": header_original,
+            "header_lower": header_lower,
+            "matched": matched,
+            "match_type": match_type,
+            "matched_key": matched_key,
+            "field_name": col_indices.get(next((k for k, v in col_indices.items() if v == col_idx), None)),
+            "sample_value": str(sample_value) if sample_value is not None else None
+        })
+
+    wb.close()
+
+    return {
+        "session_id": session_id,
+        "total_columns": len(headers),
+        "mapped_fields": len(col_indices),
+        "headers": list(headers.keys()),
+        "field_mapping": {field: headers.get(next((k for k, v in headers.items() if v == idx), None))
+                         for field, idx in col_indices.items()},
+        "details": mapping_details
+    }
+
+
 # ============================================================================
 # ЗАПУСК
 # ============================================================================
