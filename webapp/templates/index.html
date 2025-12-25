@@ -507,7 +507,7 @@
                 const content = `
                     <div class="text-center mb-6">
                         <h1 class="text-xl font-bold">
-                            ${data.company.name}
+                            <span class="text-red-600">Swiss</span>Capital
                         </h1>
                         <p class="text-gray-500 text-sm">${data.company.address}</p>
                         <p class="text-gray-500 text-sm">телефон: ${data.company.phone}</p>
@@ -522,8 +522,8 @@
                         ${data.details.map(d => `<li>➤ ${d};</li>`).join('')}
                     </ul>
                     <div class="flex justify-between mt-8 pt-4 border-t">
-                        <span>Операционный менеджер</span>
-                        <span>${data.manager}</span>
+                        <span class="font-bold">Операционный менеджер</span>
+                        <span class="font-bold">${data.manager}</span>
                     </div>
                 `;
 
