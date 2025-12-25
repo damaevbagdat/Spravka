@@ -418,7 +418,7 @@
                 <tr class="border-t hover:bg-gray-50">
                     <td class="px-3 py-2">${client.id}</td>
                     <td class="px-3 py-2">${client.contract_number}</td>
-                    <td class="px-3 py-2">${client.contract_date}</td>
+                    <td class="px-3 py-2">${formatDate(client.contract_date)}</td>
                     <td class="px-3 py-2">${client.client_name}</td>
                     <td class="px-3 py-2 ${iinClass}" title="${iinTitle}">${client.iin || ''}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.principal)}</td>
@@ -471,6 +471,19 @@
 
         function formatNumber(num) {
             return Math.round(num).toLocaleString('ru-RU');
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            // Удаляем время, если есть (например, "2025-04-30 00:00:00" -> "2025-04-30")
+            const datePart = dateStr.split(' ')[0];
+            // Разбираем дату
+            const parts = datePart.split('-');
+            if (parts.length === 3) {
+                // Преобразуем ГГГГ-ММ-ДД в ДД-ММ-ГГГГ
+                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+            }
+            return datePart;
         }
 
         function updateSummary() {
