@@ -51,23 +51,31 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 GENERATED_DIR.mkdir(exist_ok=True)
 
 # Регистрация шрифтов для PDF с поддержкой кириллицы
-try:
-    # Пробуем использовать Arial (Windows)
-    pdfmetrics.registerFont(TTFont('Arial', 'C:/Windows/Fonts/arial.ttf'))
-    pdfmetrics.registerFont(TTFont('Arial-Bold', 'C:/Windows/Fonts/arialbd.ttf'))
-    PDF_FONT = 'Arial'
-    PDF_FONT_BOLD = 'Arial-Bold'
-except:
+import platform
+
+PDF_FONT = 'Helvetica'
+PDF_FONT_BOLD = 'Helvetica-Bold'
+
+# Определяем ОС и используем соответствующие шрифты
+if platform.system() == 'Windows':
     try:
-        # Пробуем DejaVu (Linux/универсальный)
+        pdfmetrics.registerFont(TTFont('Arial', 'C:/Windows/Fonts/arial.ttf'))
+        pdfmetrics.registerFont(TTFont('Arial-Bold', 'C:/Windows/Fonts/arialbd.ttf'))
+        PDF_FONT = 'Arial'
+        PDF_FONT_BOLD = 'Arial-Bold'
+        print("✓ Registered Arial fonts for Windows")
+    except Exception as e:
+        print(f"⚠ Arial registration failed: {e}")
+else:
+    # Linux/Docker
+    try:
         pdfmetrics.registerFont(TTFont('DejaVu', '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'))
         pdfmetrics.registerFont(TTFont('DejaVu-Bold', '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'))
         PDF_FONT = 'DejaVu'
         PDF_FONT_BOLD = 'DejaVu-Bold'
-    except:
-        # Fallback - встроенный шрифт (без кириллицы)
-        PDF_FONT = 'Helvetica'
-        PDF_FONT_BOLD = 'Helvetica-Bold'
+        print("✓ Registered DejaVu fonts for Linux")
+    except Exception as e:
+        print(f"⚠ DejaVu registration failed: {e}, using Helvetica (no Cyrillic)")
 
 # Авторизация
 USERS = {
@@ -539,8 +547,9 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
 
     story = []
 
-    # Шапка
-    story.append(Paragraph(COMPANY['name'], title_style))
+    # Шапка с цветным названием компании
+    company_name_html = '<font color="red">Swiss</font>Capital'
+    story.append(Paragraph(company_name_html, title_style))
     story.append(Paragraph(COMPANY['address'], subtitle_style))
     story.append(Paragraph(f"телефон: {COMPANY['phone']}", subtitle_style))
 
