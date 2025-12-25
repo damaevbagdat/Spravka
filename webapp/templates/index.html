@@ -171,6 +171,39 @@
             </div>
         </section>
 
+        <!-- Invalid IIN Warning -->
+        <section id="invalid-iin-section" class="bg-red-50 border-2 border-red-300 rounded-xl shadow-sm p-6 mb-6 hidden">
+            <div class="flex items-start gap-3">
+                <svg class="w-6 h-6 text-red-600 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-red-800 mb-2">Обнаружены некорректные ИИН</h3>
+                    <p class="text-red-700 text-sm mb-3">
+                        Следующие клиенты имеют некорректные ИИН (должен состоять из 12 цифр).
+                        Пожалуйста, исправьте эти данные в исходном Excel файле и загрузите заново.
+                    </p>
+
+                    <div class="bg-white rounded-lg border border-red-200 overflow-hidden">
+                        <table class="w-full text-sm">
+                            <thead class="bg-red-100">
+                                <tr>
+                                    <th class="px-4 py-2 text-left text-red-800">№</th>
+                                    <th class="px-4 py-2 text-left text-red-800">ФИО клиента</th>
+                                    <th class="px-4 py-2 text-left text-red-800">ИИН</th>
+                                    <th class="px-4 py-2 text-left text-red-800">Ошибка</th>
+                                </tr>
+                            </thead>
+                            <tbody id="invalidIinBody" class="divide-y divide-red-200">
+                                <!-- Будет заполнено через JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Step 4: Generate -->
         <section id="step-generate" class="bg-white rounded-xl shadow-sm p-6 mb-6 hidden">
             <div class="flex items-center justify-between">
@@ -360,6 +393,7 @@
                 }
 
                 renderClientsTable();
+                renderInvalidIinSection();
 
                 document.getElementById('step-data').classList.remove('hidden');
                 document.getElementById('step-generate').classList.remove('hidden');
@@ -375,13 +409,18 @@
 
         function renderClientsTable() {
             const tbody = document.getElementById('clientsBody');
-            tbody.innerHTML = clientsData.map((client, index) => `
+            tbody.innerHTML = clientsData.map((client, index) => {
+                // Определяем класс для ячейки ИИН
+                const iinClass = client.iin_valid === false ? 'bg-red-100 text-red-800 font-medium' : '';
+                const iinTitle = client.iin_valid === false ? client.iin_error : '';
+
+                return `
                 <tr class="border-t hover:bg-gray-50">
                     <td class="px-3 py-2">${client.id}</td>
                     <td class="px-3 py-2">${client.contract_number}</td>
                     <td class="px-3 py-2">${client.contract_date}</td>
                     <td class="px-3 py-2">${client.client_name}</td>
-                    <td class="px-3 py-2">${client.iin || ''}</td>
+                    <td class="px-3 py-2 ${iinClass}" title="${iinTitle}">${client.iin || ''}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.principal)}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.reward)}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.deferred_interest)}</td>
@@ -400,7 +439,34 @@
                         </button>
                     </td>
                 </tr>
-            `).join('');
+                `;
+            }).join('');
+        }
+
+        function renderInvalidIinSection() {
+            // Находим клиентов с некорректными ИИН
+            const invalidClients = clientsData.filter(client => client.iin_valid === false);
+
+            const section = document.getElementById('invalid-iin-section');
+            const tbody = document.getElementById('invalidIinBody');
+
+            if (invalidClients.length > 0) {
+                // Показываем секцию
+                section.classList.remove('hidden');
+
+                // Заполняем таблицу
+                tbody.innerHTML = invalidClients.map(client => `
+                    <tr class="hover:bg-red-50">
+                        <td class="px-4 py-3 text-gray-700">${client.id}</td>
+                        <td class="px-4 py-3 text-gray-900 font-medium">${client.client_name}</td>
+                        <td class="px-4 py-3 text-red-700 font-mono">${client.iin || '(отсутствует)'}</td>
+                        <td class="px-4 py-3 text-red-600">${client.iin_error || 'Неизвестная ошибка'}</td>
+                    </tr>
+                `).join('');
+            } else {
+                // Скрываем секцию, если нет ошибок
+                section.classList.add('hidden');
+            }
         }
 
         function formatNumber(num) {

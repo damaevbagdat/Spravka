@@ -165,6 +165,25 @@ def get_column_mapping_info(file_path: Path) -> dict:
     }
 
 
+def validate_iin(iin: str) -> dict:
+    """Валидация ИИН клиента"""
+    if not iin:
+        return {'valid': False, 'error': 'ИИН отсутствует'}
+
+    # Удаляем пробелы
+    iin_clean = iin.strip()
+
+    # Проверка, что содержит только цифры
+    if not iin_clean.isdigit():
+        return {'valid': False, 'error': f'ИИН содержит недопустимые символы: {iin_clean}'}
+
+    # Проверка длины
+    if len(iin_clean) != 12:
+        return {'valid': False, 'error': f'ИИН должен содержать 12 цифр, найдено: {len(iin_clean)}'}
+
+    return {'valid': True, 'error': None}
+
+
 def read_excel_data(file_path: Path) -> List[dict]:
     """Чтение данных из Excel файла"""
     wb = load_workbook(file_path)
@@ -291,7 +310,16 @@ def read_excel_data(file_path: Path) -> List[dict]:
         for field_name, col_idx in col_indices.items():
             value = ws.cell(row=row, column=col_idx).value
             if value is not None:
-                if field_name in ['contract_number', 'contract_date', 'client_name', 'iin']:
+                if field_name == 'iin':
+                    # Особая обработка ИИН для сохранения ведущих нулей
+                    if isinstance(value, (int, float)):
+                        # Если число, преобразуем в строку и дополняем нулями до 12 цифр
+                        str_value = str(int(value)).zfill(12)
+                    else:
+                        # Если строка, просто убираем пробелы
+                        str_value = str(value).strip()
+                    client[field_name] = str_value if str_value else ''
+                elif field_name in ['contract_number', 'contract_date', 'client_name']:
                     # Преобразуем в строку и убираем пробелы
                     str_value = str(value).strip()
                     client[field_name] = str_value if str_value else ''
@@ -321,6 +349,11 @@ def read_excel_data(file_path: Path) -> List[dict]:
                 client['principal'] + client['reward'] + client['deferred_interest'] +
                 client['penalties'] + client['admin_fees']
             )
+
+        # Валидация ИИН
+        iin_validation = validate_iin(client['iin'])
+        client['iin_valid'] = iin_validation['valid']
+        client['iin_error'] = iin_validation['error']
 
         # Пропускаем пустые строки (нет номера договора, ФИО и всех сумм)
         if not client['contract_number'] and not client['client_name'] and client['total'] == 0:
