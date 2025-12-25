@@ -245,13 +245,20 @@ def read_excel_data(file_path: Path) -> List[dict]:
         'сумма вознаграждения': 'reward',
         'сумма процентов': 'reward',
         'проценты': 'reward',
-        # Отсроченные проценты
+        # Отсроченные проценты / поступления
         'отсроченные проценты': 'deferred_interest',
         'сумма отсроченных процентов': 'deferred_interest',
         'отсроч проценты': 'deferred_interest',
         'отсроч. проценты': 'deferred_interest',
         'отсроченн проценты': 'deferred_interest',
         'отсроченн. проценты': 'deferred_interest',
+        'отсроченные поступления': 'deferred_interest',
+        'сумма отсроченных поступлений': 'deferred_interest',
+        'отсроч поступления': 'deferred_interest',
+        'отсроч. поступления': 'deferred_interest',
+        'отсроченн поступления': 'deferred_interest',
+        'отсроченн. поступления': 'deferred_interest',
+        'отсроченные поступлений': 'deferred_interest',
         # Пени, штрафы, неустойки (объединенный столбец)
         'пени, штрафы, неустойки': 'penalties',
         'пени штрафы неустойки': 'penalties',
