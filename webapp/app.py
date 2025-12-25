@@ -25,6 +25,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
 from openpyxl.drawing.image import Image as XLImage
+from openpyxl.cell.text import InlineFont
+from openpyxl.cell.rich_text import TextBlock, CellRichText
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -405,8 +407,17 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     else:
         # Текстовая шапка если нет логотипа
         ws.merge_cells(f'A{row}:C{row}')
-        ws[f'A{row}'] = "SwissCapital"
-        ws[f'A{row}'].font = Font(name='Arial', size=18, bold=True)
+
+        # Создаем цветной текст: "Swiss" красным, "Capital" черным
+        red_font = InlineFont(rFont='Arial', sz=18, b=True, color='FF0000')
+        black_font = InlineFont(rFont='Arial', sz=18, b=True, color='000000')
+
+        rich_text = CellRichText(
+            TextBlock(red_font, 'Swiss'),
+            TextBlock(black_font, 'Capital')
+        )
+
+        ws[f'A{row}'].value = rich_text
         ws[f'A{row}'].alignment = Alignment(horizontal='center')
         ws.row_dimensions[row].height = 30
         row += 1
