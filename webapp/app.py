@@ -196,7 +196,7 @@ def validate_iin(iin: str) -> dict:
 
 def read_excel_data(file_path: Path) -> List[dict]:
     """Чтение данных из Excel файла"""
-    wb = load_workbook(file_path)
+    wb = load_workbook(file_path, data_only=True)
     ws = wb.active
 
     # Маппинг заголовков
@@ -909,7 +909,7 @@ async def debug_mapping(session_id: str, username: str = Depends(verify_credenti
     file_path = excel_files[0]
 
     # Читаем Excel
-    wb = load_workbook(file_path)
+    wb = load_workbook(file_path, data_only=True)
     ws = wb.active
 
     # Собираем заголовки
