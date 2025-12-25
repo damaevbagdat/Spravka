@@ -2,8 +2,11 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# Установка зависимостей системы
+# Установка зависимостей системы и шрифтов для PDF
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    fonts-dejavu \
+    fonts-dejavu-core \
+    fonts-dejavu-extra \
     && rm -rf /var/lib/apt/lists/*
 
 # Копирование зависимостей
