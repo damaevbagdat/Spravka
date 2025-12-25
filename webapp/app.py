@@ -77,8 +77,8 @@ USERS = {
 # Данные компании
 COMPANY = {
     'name': 'swisscapital',
-    'address1': 'Республика Казахстан, г.Алматы, 050026',
-    'address2': 'ул. Нурмакова д.93А. тел +7(727)3550771.'
+    'address': 'Республика Казахстан, г. Алматы, пр. Достык, 188',
+    'phone': '+7 700 836 78 13'
 }
 
 # Путь к логотипу
@@ -202,6 +202,10 @@ def read_excel_data(file_path: Path) -> List[dict]:
         'фио клиента': 'client_name',
         'клиент': 'client_name',
         'заемщик': 'client_name',
+        # ИИН
+        'иин': 'iin',
+        'иин клиента': 'iin',
+        'iin': 'iin',
         # Основной долг
         'основной долг': 'principal',
         'сумма од': 'principal',
@@ -272,6 +276,7 @@ def read_excel_data(file_path: Path) -> List[dict]:
             'contract_number': '',
             'contract_date': '',
             'client_name': '',
+            'iin': '',  # ИИН клиента
             'principal': 0,
             'reward': 0,
             'deferred_interest': 0,
@@ -286,7 +291,7 @@ def read_excel_data(file_path: Path) -> List[dict]:
         for field_name, col_idx in col_indices.items():
             value = ws.cell(row=row, column=col_idx).value
             if value is not None:
-                if field_name in ['contract_number', 'contract_date', 'client_name']:
+                if field_name in ['contract_number', 'contract_date', 'client_name', 'iin']:
                     # Преобразуем в строку и убираем пробелы
                     str_value = str(value).strip()
                     client[field_name] = str_value if str_value else ''
@@ -366,13 +371,13 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
         row += 1
 
         ws.merge_cells(f'A{row}:C{row}')
-        ws[f'A{row}'] = COMPANY['address1']
+        ws[f'A{row}'] = COMPANY['address']
         ws[f'A{row}'].font = Font(size=9, color='666666')
         ws[f'A{row}'].alignment = Alignment(horizontal='center')
         row += 1
 
         ws.merge_cells(f'A{row}:C{row}')
-        ws[f'A{row}'] = COMPANY['address2']
+        ws[f'A{row}'] = f"телефон: {COMPANY['phone']}"
         ws[f'A{row}'].font = Font(size=9, color='666666')
         ws[f'A{row}'].alignment = Alignment(horizontal='center')
         row += 1
@@ -390,9 +395,10 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     contract_date = format_date_russian(client['contract_date'])
     total_text = format_number_with_text(int(client['total']))
 
+    iin_text = f", ИИН {client['iin']}" if client.get('iin') else ""
     main_text = (
         f"По договору займа №{client['contract_number']} от {contract_date}, "
-        f"Заемщик: {client['client_name']}, по состоянию на {report_date} "
+        f"Заемщик: {client['client_name']}{iin_text}, по состоянию на {report_date} "
         f"ссудная задолженность составляет {total_text} тенге, из них:"
     )
 
@@ -413,7 +419,7 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     if client['penalties'] > 0:
         details.append(('Пени, штрафы, неустойки', client['penalties'], True))
     if client['admin_fees'] > 0:
-        details.append(('Административные сборы', client['admin_fees'], False))
+        details.append(('Прочие поступления (административные сборы, гос.пошлина)', client['admin_fees'], False))
 
     for label, amount, show_text in details:
         ws[f'A{row}'] = "➤"
@@ -428,12 +434,14 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
         ws[f'B{row}'] = text
         row += 1
 
-    row += 2
+    row += 10  # Разрыв 10 строк перед подписью
 
-    # Подпись
+    # Подпись (жирным шрифтом)
     ws.merge_cells(f'A{row}:B{row}')
     ws[f'A{row}'] = "Операционный менеджер"
+    ws[f'A{row}'].font = Font(bold=True)
     ws[f'C{row}'] = manager
+    ws[f'C{row}'].font = Font(bold=True)
     ws[f'C{row}'].alignment = Alignment(horizontal='right')
 
     wb.save(output_path)
@@ -455,27 +463,27 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     title_style = ParagraphStyle(
         'Title',
         fontName=PDF_FONT_BOLD,
-        fontSize=18,
+        fontSize=16,  # Уменьшено с 18
         alignment=1,
-        spaceAfter=6
+        spaceAfter=4  # Уменьшено с 6
     )
 
     subtitle_style = ParagraphStyle(
         'Subtitle',
         fontName=PDF_FONT,
-        fontSize=9,
+        fontSize=8,  # Уменьшено с 9
         textColor=colors.grey,
         alignment=1,
-        spaceAfter=3
+        spaceAfter=2  # Уменьшено с 3
     )
 
     heading_style = ParagraphStyle(
         'Heading',
         fontName=PDF_FONT_BOLD,
-        fontSize=12,
+        fontSize=11,  # Уменьшено с 12
         alignment=1,
-        spaceBefore=20,
-        spaceAfter=20
+        spaceBefore=10,  # Уменьшено с 20
+        spaceAfter=10  # Уменьшено с 20
     )
 
     body_style = ParagraphStyle(
@@ -483,7 +491,8 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
         fontName=PDF_FONT,
         fontSize=10,
         leading=14,
-        spaceAfter=10
+        spaceAfter=10,
+        leftIndent=10*mm  # Отступ 1 см
     )
 
     bullet_style = ParagraphStyle(
@@ -498,8 +507,8 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
 
     # Шапка
     story.append(Paragraph(COMPANY['name'], title_style))
-    story.append(Paragraph(COMPANY['address1'], subtitle_style))
-    story.append(Paragraph(COMPANY['address2'], subtitle_style))
+    story.append(Paragraph(COMPANY['address'], subtitle_style))
+    story.append(Paragraph(f"телефон: {COMPANY['phone']}", subtitle_style))
 
     # Заголовок
     story.append(Paragraph("Расчет ссудной задолженности", heading_style))
@@ -508,9 +517,10 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     contract_date = format_date_russian(client['contract_date'])
     total_text = format_number_with_text(int(client['total']))
 
+    iin_text = f", ИИН {client['iin']}" if client.get('iin') else ""
     main_text = (
         f"По договору займа №{client['contract_number']} от {contract_date}, "
-        f"Заемщик: {client['client_name']}, по состоянию на {report_date} "
+        f"Заемщик: {client['client_name']}{iin_text}, по состоянию на {report_date} "
         f"ссудная задолженность составляет {total_text} тенге, из них:"
     )
 
@@ -528,7 +538,7 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     if client['penalties'] > 0:
         details.append(('Пени, штрафы, неустойки', client['penalties'], True))
     if client['admin_fees'] > 0:
-        details.append(('Административные сборы', client['admin_fees'], False))
+        details.append(('Прочие поступления (административные сборы, гос.пошлина)', client['admin_fees'], False))
 
     for label, amount, show_text in details:
         if show_text and amount > 0:
@@ -537,9 +547,9 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
             text = f"• {label} – {int(amount):,} тенге;".replace(',', ' ')
         story.append(Paragraph(text, bullet_style))
 
-    story.append(Spacer(1, 40))
+    story.append(Spacer(1, 100))  # Разрыв 10 строк (примерно 100 пунктов)
 
-    # Подпись
+    # Подпись (жирным шрифтом)
     signature_data = [
         ['Операционный менеджер', manager]
     ]
@@ -547,7 +557,7 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     signature_table.setStyle(TableStyle([
         ('ALIGN', (0, 0), (0, 0), 'LEFT'),
         ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), PDF_FONT),
+        ('FONTNAME', (0, 0), (-1, -1), PDF_FONT_BOLD),  # Жирный шрифт
         ('FONTSIZE', (0, 0), (-1, -1), 10),
     ]))
     story.append(signature_table)
@@ -690,13 +700,14 @@ async def preview_certificate(
     if client['penalties'] > 0:
         details.append(f"Пени, штрафы, неустойки – {format_number_with_text(int(client['penalties']))} тенге")
     if client['admin_fees'] > 0:
-        details.append(f"Административные сборы – {int(client['admin_fees']):,} тенге".replace(',', ' '))
+        details.append(f"Прочие поступления (административные сборы, гос.пошлина) – {int(client['admin_fees']):,} тенге".replace(',', ' '))
 
     return {
         "company": COMPANY,
         "contract_number": client['contract_number'],
         "contract_date": contract_date,
         "client_name": client['client_name'],
+        "iin": client.get('iin', ''),  # Добавляем ИИН
         "report_date": report_date,
         "total": int(client['total']),
         "total_text": total_text,
