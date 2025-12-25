@@ -248,6 +248,10 @@ def read_excel_data(file_path: Path) -> List[dict]:
         # Отсроченные проценты
         'отсроченные проценты': 'deferred_interest',
         'сумма отсроченных процентов': 'deferred_interest',
+        'отсроч проценты': 'deferred_interest',
+        'отсроч. проценты': 'deferred_interest',
+        'отсроченн проценты': 'deferred_interest',
+        'отсроченн. проценты': 'deferred_interest',
         # Пени, штрафы, неустойки (объединенный столбец)
         'пени, штрафы, неустойки': 'penalties',
         'пени штрафы неустойки': 'penalties',

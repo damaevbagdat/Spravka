@@ -159,8 +159,8 @@
                             <th class="px-2 py-2 text-left">ИИН</th>
                             <th class="px-2 py-2 text-right">ОД</th>
                             <th class="px-2 py-2 text-right">Возн.</th>
-                            <th class="px-2 py-2 text-right">Отср.</th>
                             <th class="px-2 py-2 text-right">Пени/Штрафы</th>
+                            <th class="px-2 py-2 text-right">Отср.</th>
                             <th class="px-2 py-2 text-right">Прочие</th>
                             <th class="px-3 py-2 text-right font-semibold">ИТОГО</th>
                             <th class="px-3 py-2 text-center">Действия</th>
@@ -423,8 +423,8 @@
                     <td class="px-3 py-2 ${iinClass}" title="${iinTitle}">${client.iin || ''}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.principal)}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.reward)}</td>
-                    <td class="px-3 py-2 text-right">${formatNumber(client.deferred_interest)}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.penalties)}</td>
+                    <td class="px-3 py-2 text-right">${formatNumber(client.deferred_interest)}</td>
                     <td class="px-3 py-2 text-right">${formatNumber(client.admin_fees)}</td>
                     <td class="px-3 py-2 text-right font-medium">${formatNumber(client.total)}</td>
                     <td class="px-3 py-2 text-center">
