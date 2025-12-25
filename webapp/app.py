@@ -405,7 +405,7 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     else:
         # Текстовая шапка если нет логотипа
         ws.merge_cells(f'A{row}:C{row}')
-        ws[f'A{row}'] = COMPANY['name']
+        ws[f'A{row}'] = "SwissCapital"
         ws[f'A{row}'].font = Font(name='Arial', size=18, bold=True)
         ws[f'A{row}'].alignment = Alignment(horizontal='center')
         ws.row_dimensions[row].height = 30
@@ -423,14 +423,14 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
         ws[f'A{row}'].alignment = Alignment(horizontal='center')
         row += 1
 
-    row += 1
+    row += 5  # Разрыв 5 строк после шапки
 
     # Заголовок
     ws.merge_cells(f'A{row}:C{row}')
     ws[f'A{row}'] = "Расчет ссудной задолженности"
     ws[f'A{row}'].font = Font(bold=True, size=12)
     ws[f'A{row}'].alignment = Alignment(horizontal='center')
-    row += 2
+    row += 5  # Разрыв 5 строк после заголовка
 
     # Основной текст
     contract_date = format_date_russian(client['contract_date'])
@@ -476,7 +476,7 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
         ws[f'B{row}'].alignment = Alignment(indent=2)
         row += 1
 
-    row += 20  # Разрыв 20 строк перед подписью (увеличено с 10)
+    row += 10  # Разрыв 10 строк перед подписью
 
     # Подпись (жирным шрифтом)
     ws.merge_cells(f'A{row}:B{row}')
@@ -552,9 +552,11 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     story.append(Paragraph(company_name_html, title_style))
     story.append(Paragraph(COMPANY['address'], subtitle_style))
     story.append(Paragraph(f"телефон: {COMPANY['phone']}", subtitle_style))
+    story.append(Spacer(1, 50))  # Разрыв 5 строк после шапки
 
     # Заголовок
     story.append(Paragraph("Расчет ссудной задолженности", heading_style))
+    story.append(Spacer(1, 50))  # Разрыв 5 строк после заголовка
 
     # Основной текст
     contract_date = format_date_russian(client['contract_date'])
@@ -590,7 +592,7 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
             text = f"• {label} – {int(amount):,} тенге;".replace(',', ' ')
         story.append(Paragraph(text, bullet_style))
 
-    story.append(Spacer(1, 200))  # Разрыв 20 строк (увеличено с 10)
+    story.append(Spacer(1, 100))  # Разрыв 10 строк перед подписью
 
     # Подпись (жирным шрифтом)
     signature_data = [
