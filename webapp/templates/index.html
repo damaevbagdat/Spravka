@@ -507,10 +507,10 @@
                 const content = `
                     <div class="text-center mb-6">
                         <h1 class="text-xl font-bold">
-                            <span class="text-red-600">swiss</span>capital
+                            ${data.company.name}
                         </h1>
-                        <p class="text-gray-500 text-sm">${data.company.address1}</p>
-                        <p class="text-gray-500 text-sm">${data.company.address2}</p>
+                        <p class="text-gray-500 text-sm">${data.company.address}</p>
+                        <p class="text-gray-500 text-sm">телефон: ${data.company.phone}</p>
                     </div>
                     <h2 class="text-center font-semibold mb-4">Расчет ссудной задолженности</h2>
                     <p class="mb-4">

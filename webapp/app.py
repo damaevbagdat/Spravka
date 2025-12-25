@@ -76,7 +76,7 @@ USERS = {
 
 # Данные компании
 COMPANY = {
-    'name': 'swisscapital',
+    'name': 'SwissCapital',
     'address': 'Республика Казахстан, г. Алматы, пр. Достык, 188',
     'phone': '+7 700 836 78 13'
 }
