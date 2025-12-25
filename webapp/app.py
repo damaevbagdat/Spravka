@@ -897,9 +897,16 @@ async def download_template(username: str = Depends(verify_credentials)):
 @app.get("/debug-mapping/{session_id}")
 async def debug_mapping(session_id: str, username: str = Depends(verify_credentials)):
     """Отладка: показать маппинг столбцов Excel"""
-    file_path = UPLOAD_DIR / f"{session_id}.xlsx"
-    if not file_path.exists():
-        raise HTTPException(404, "Файл не найден")
+    session_dir = UPLOAD_DIR / session_id
+    if not session_dir.exists():
+        raise HTTPException(404, "Сессия не найдена")
+
+    # Находим первый Excel файл в директории
+    excel_files = list(session_dir.glob("*.xlsx")) + list(session_dir.glob("*.xls"))
+    if not excel_files:
+        raise HTTPException(404, "Файл не найден в сессии")
+
+    file_path = excel_files[0]
 
     # Читаем Excel
     wb = load_workbook(file_path)
