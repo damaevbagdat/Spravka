@@ -437,7 +437,7 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
 
     ws.merge_cells(f'A{row}:C{row}')
     ws[f'A{row}'] = main_text
-    ws[f'A{row}'].alignment = Alignment(wrap_text=True, vertical='top')
+    ws[f'A{row}'].alignment = Alignment(wrap_text=True, vertical='top', indent=2)
     ws.row_dimensions[row].height = 60
     row += 2
 
@@ -456,7 +456,7 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
 
     for label, amount, show_text in details:
         ws[f'A{row}'] = "➤"
-        ws[f'A{row}'].alignment = Alignment(horizontal='center')
+        ws[f'A{row}'].alignment = Alignment(horizontal='center', indent=2)
         ws.merge_cells(f'B{row}:C{row}')
 
         if show_text and amount > 0:
@@ -465,9 +465,10 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
             text = f"{label} – {int(amount):,} тенге;".replace(',', ' ')
 
         ws[f'B{row}'] = text
+        ws[f'B{row}'].alignment = Alignment(indent=2)
         row += 1
 
-    row += 10  # Разрыв 10 строк перед подписью
+    row += 20  # Разрыв 20 строк перед подписью (увеличено с 10)
 
     # Подпись (жирным шрифтом)
     ws.merge_cells(f'A{row}:B{row}')
@@ -532,7 +533,7 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
         'Bullet',
         fontName=PDF_FONT,
         fontSize=10,
-        leftIndent=20,
+        leftIndent=10*mm,  # Отступ 1 см
         spaceAfter=5
     )
 
@@ -580,7 +581,7 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
             text = f"• {label} – {int(amount):,} тенге;".replace(',', ' ')
         story.append(Paragraph(text, bullet_style))
 
-    story.append(Spacer(1, 100))  # Разрыв 10 строк (примерно 100 пунктов)
+    story.append(Spacer(1, 200))  # Разрыв 20 строк (увеличено с 10)
 
     # Подпись (жирным шрифтом)
     signature_data = [
