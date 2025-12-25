@@ -513,12 +513,12 @@
                         <p class="text-gray-500 text-sm">телефон: ${data.company.phone}</p>
                     </div>
                     <h2 class="text-center font-semibold mb-4">Расчет ссудной задолженности</h2>
-                    <p class="mb-4">
+                    <p class="mb-4 pl-10">
                         По договору займа №${data.contract_number} от ${data.contract_date},
                         заключенному с ${data.client_name}, по состоянию на ${data.report_date}
                         ссудная задолженность составляет ${data.total_text} тенге, из них:
                     </p>
-                    <ul class="space-y-1 mb-6">
+                    <ul class="space-y-1 mb-6 pl-10">
                         ${data.details.map(d => `<li>➤ ${d};</li>`).join('')}
                     </ul>
                     <div class="flex justify-between mt-8 pt-4 border-t">
