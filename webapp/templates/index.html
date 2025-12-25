@@ -142,11 +142,21 @@
 
         <!-- Step 3: Edit Data -->
         <section id="step-data" class="bg-white rounded-xl shadow-sm p-6 mb-6 hidden">
-            <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
-                <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
-                Данные клиентов
-                <span class="text-gray-400 text-sm font-normal ml-2">(можно редактировать)</span>
-            </h2>
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-lg font-semibold flex items-center gap-2">
+                    <span class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm">3</span>
+                    Данные клиентов
+                    <span class="text-gray-400 text-sm font-normal ml-2">(можно редактировать)</span>
+                </h2>
+                <button id="debugMappingBtn"
+                        class="px-3 py-1.5 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors flex items-center gap-1.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Отладка распознавания
+                </button>
+            </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-xs" id="clientsTable">
@@ -642,6 +652,16 @@
         // Close modal on escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePreview();
+        });
+
+        // Debug mapping button
+        document.getElementById('debugMappingBtn').addEventListener('click', () => {
+            if (!currentSessionId) {
+                alert('Сначала загрузите Excel файл');
+                return;
+            }
+            // Открыть отладочный endpoint в новой вкладке
+            window.open(`/debug-mapping/${currentSessionId}`, '_blank');
         });
     </script>
 </body>
