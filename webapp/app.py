@@ -897,9 +897,6 @@ async def download_template(username: str = Depends(verify_credentials)):
 @app.get("/debug-mapping/{session_id}")
 async def debug_mapping(session_id: str, username: str = Depends(verify_credentials)):
     """Отладка: показать маппинг столбцов Excel"""
-    if session_id not in active_sessions:
-        raise HTTPException(404, "Сессия не найдена")
-
     file_path = UPLOAD_DIR / f"{session_id}.xlsx"
     if not file_path.exists():
         raise HTTPException(404, "Файл не найден")
@@ -1034,7 +1031,7 @@ async def debug_mapping(session_id: str, username: str = Depends(verify_credenti
             "matched": matched,
             "match_type": match_type,
             "matched_key": matched_key,
-            "field_name": col_indices.get(next((k for k, v in col_indices.items() if v == col_idx), None)),
+            "field_name": next((k for k, v in col_indices.items() if v == col_idx), None),
             "sample_value": str(sample_value) if sample_value is not None else None
         })
 
