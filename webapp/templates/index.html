@@ -490,8 +490,8 @@
             // Разбираем дату
             const parts = datePart.split('-');
             if (parts.length === 3) {
-                // Преобразуем ГГГГ-ММ-ДД в ДД-ММ-ГГГГ
-                return `${parts[2]}-${parts[1]}-${parts[0]}`;
+                // Преобразуем ГГГГ-ММ-ДД в ДД.ММ.ГГГГ
+                return `${parts[2]}.${parts[1]}.${parts[0]}`;
             }
             return datePart;
         }

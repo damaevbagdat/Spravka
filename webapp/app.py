@@ -132,12 +132,7 @@ def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 # ============================================================================
 
 def format_date_russian(date_str):
-    """Форматирование даты в русском формате"""
-    months = {
-        1: 'января', 2: 'февраля', 3: 'марта', 4: 'апреля',
-        5: 'мая', 6: 'июня', 7: 'июля', 8: 'августа',
-        9: 'сентября', 10: 'октября', 11: 'ноября', 12: 'декабря'
-    }
+    """Форматирование даты в формате ДД.ММ.ГГГГ"""
     try:
         if isinstance(date_str, datetime):
             dt = date_str
@@ -152,7 +147,8 @@ def format_date_russian(date_str):
                     continue
             else:
                 return str(date_str)
-        return f"{dt.day} {months[dt.month]} {dt.year} г."
+        # Формат ДД.ММ.ГГГГ
+        return f"{dt.day:02d}.{dt.month:02d}.{dt.year}"
     except:
         return str(date_str)
 
