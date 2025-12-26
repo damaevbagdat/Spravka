@@ -142,9 +142,11 @@ def format_date_russian(date_str):
         if isinstance(date_str, datetime):
             dt = date_str
         else:
-            for fmt in ['%d.%m.%Y', '%Y-%m-%d', '%d/%m/%Y']:
+            # Сначала убираем время, если есть (например "2025-03-18 00:00:00" -> "2025-03-18")
+            date_part = str(date_str).split(' ')[0]
+            for fmt in ['%d.%m.%Y', '%Y-%m-%d', '%d/%m/%Y', '%d-%m-%Y']:
                 try:
-                    dt = datetime.strptime(str(date_str), fmt)
+                    dt = datetime.strptime(date_part, fmt)
                     break
                 except ValueError:
                     continue
