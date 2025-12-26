@@ -538,7 +538,7 @@
                     <h2 class="text-center font-semibold mb-4">Расчет ссудной задолженности</h2>
                     <p class="mb-4 pl-10">
                         По договору займа №${data.contract_number} от ${data.contract_date},
-                        заключенному с ${data.client_name}, по состоянию на ${data.report_date}
+                        заключенному с ${data.client_name}${data.iin ? ', ИИН ' + data.iin : ''}, по состоянию на ${data.report_date}
                         ссудная задолженность составляет ${data.total_text} тенге, из них:
                     </p>
                     <ul class="space-y-1 mb-6 pl-10">
