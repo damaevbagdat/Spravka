@@ -344,7 +344,8 @@ def read_excel_data(file_path: Path) -> List[dict]:
                     client[field_name] = str_value if str_value else ''
                 else:
                     try:
-                        val = float(value) if value else 0
+                        # Округляем до целого (тенге без тиынов)
+                        val = round(float(value)) if value else 0
                         if field_name == 'admin_fees':
                             # Суммируем все значения из столбцов гос.пошлины и админ.сборов
                             client['admin_fees'] += val
