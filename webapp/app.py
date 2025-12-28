@@ -510,12 +510,15 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     # Добавляем печать с подписью для Койбасова Е.Б.
     stamp_path = STATIC_DIR / "Койбасова Е.Б..png"
     if manager == "Койбасова Е.Б." and stamp_path.exists():
-        img = XLImage(str(stamp_path))
-        img.width = 120  # Ширина в пикселях
-        img.height = 120  # Высота в пикселях
-        # Позиционируем печать между "Операционный менеджер" и ФИО
-        img.anchor = f'B{row - 3}'
-        ws.add_image(img)
+        try:
+            img = XLImage(str(stamp_path))
+            img.width = 120  # Ширина в пикселях
+            img.height = 120  # Высота в пикселях
+            # Позиционируем печать между "Операционный менеджер" и ФИО
+            img.anchor = f'B{row - 3}'
+            ws.add_image(img)
+        except Exception as e:
+            print(f"Предупреждение: не удалось добавить печать в Excel: {e}")
 
     wb.save(output_path)
     wb.close()
@@ -628,23 +631,29 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     # Подпись (жирным шрифтом)
     # Проверяем, нужно ли добавить печать с подписью
     stamp_path = STATIC_DIR / "Койбасова Е.Б..png"
+    use_stamp = False
     if manager == "Койбасова Е.Б." and stamp_path.exists():
-        # Создаем таблицу с печатью
-        stamp_img = RLImage(str(stamp_path), width=35*mm, height=35*mm)
-        signature_data = [
-            ['Операционный менеджер', stamp_img, manager]
-        ]
-        signature_table = Table(signature_data, colWidths=[80*mm, 40*mm, 50*mm])
-        signature_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
-            ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
-            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-            ('FONTNAME', (0, 0), (0, 0), PDF_FONT_BOLD),
-            ('FONTNAME', (2, 0), (2, 0), PDF_FONT_BOLD),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ]))
-    else:
+        try:
+            # Создаем таблицу с печатью
+            stamp_img = RLImage(str(stamp_path), width=35*mm, height=35*mm)
+            signature_data = [
+                ['Операционный менеджер', stamp_img, manager]
+            ]
+            signature_table = Table(signature_data, colWidths=[80*mm, 40*mm, 50*mm])
+            signature_table.setStyle(TableStyle([
+                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+                ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+                ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTNAME', (0, 0), (0, 0), PDF_FONT_BOLD),
+                ('FONTNAME', (2, 0), (2, 0), PDF_FONT_BOLD),
+                ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ]))
+            use_stamp = True
+        except Exception as e:
+            print(f"Предупреждение: не удалось добавить печать в PDF: {e}")
+
+    if not use_stamp:
         signature_data = [
             ['Операционный менеджер', manager]
         ]
@@ -843,7 +852,13 @@ async def generate_certificates(
         formats.append('pdf')
 
     # Генерируем справки
-    generated = generate_all_certificates(clients, report_date, manager, output_dir, formats)
+    try:
+        generated = generate_all_certificates(clients, report_date, manager, output_dir, formats)
+    except Exception as e:
+        import traceback
+        print(f"Ошибка генерации справок: {e}")
+        traceback.print_exc()
+        raise HTTPException(500, f"Ошибка генерации справок: {str(e)}")
 
     # Создаём архивы
     archives = {}
