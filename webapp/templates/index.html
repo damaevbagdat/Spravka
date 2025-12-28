@@ -544,9 +544,16 @@
                     <ul class="space-y-1 mb-6 pl-10">
                         ${data.details.map(d => `<li>➤ ${d};</li>`).join('')}
                     </ul>
-                    <div class="flex justify-between mt-8 pt-4 border-t">
+                    <div class="flex justify-between items-end mt-8 pt-4 border-t">
                         <span class="font-bold">Операционный менеджер</span>
-                        <span class="font-bold">${data.manager}</span>
+                        <div class="relative text-right">
+                            ${data.manager === 'Койбасова Е.Б.' ?
+                                `<img src="/static/Койбасова Е.Б..png"
+                                     alt="Печать и подпись"
+                                     class="absolute -top-16 -left-8 w-32 h-auto opacity-90"
+                                     style="mix-blend-mode: multiply;">` : ''}
+                            <span class="font-bold">${data.manager}</span>
+                        </div>
                     </div>
                 `;
 

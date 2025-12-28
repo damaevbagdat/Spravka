@@ -31,7 +31,7 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
@@ -507,6 +507,16 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     ws[f'C{row}'].font = Font(bold=True)
     ws[f'C{row}'].alignment = Alignment(horizontal='right')
 
+    # Добавляем печать с подписью для Койбасова Е.Б.
+    stamp_path = STATIC_DIR / "Койбасова Е.Б..png"
+    if manager == "Койбасова Е.Б." and stamp_path.exists():
+        img = XLImage(str(stamp_path))
+        img.width = 120  # Ширина в пикселях
+        img.height = 120  # Высота в пикселях
+        # Позиционируем печать между "Операционный менеджер" и ФИО
+        img.anchor = f'B{row - 3}'
+        ws.add_image(img)
+
     wb.save(output_path)
     wb.close()
 
@@ -616,16 +626,35 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     story.append(Spacer(1, 100))  # Разрыв 10 строк перед подписью
 
     # Подпись (жирным шрифтом)
-    signature_data = [
-        ['Операционный менеджер', manager]
-    ]
-    signature_table = Table(signature_data, colWidths=[120*mm, 50*mm])
-    signature_table.setStyle(TableStyle([
-        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-        ('FONTNAME', (0, 0), (-1, -1), PDF_FONT_BOLD),  # Жирный шрифт
-        ('FONTSIZE', (0, 0), (-1, -1), 10),
-    ]))
+    # Проверяем, нужно ли добавить печать с подписью
+    stamp_path = STATIC_DIR / "Койбасова Е.Б..png"
+    if manager == "Койбасова Е.Б." and stamp_path.exists():
+        # Создаем таблицу с печатью
+        stamp_img = RLImage(str(stamp_path), width=35*mm, height=35*mm)
+        signature_data = [
+            ['Операционный менеджер', stamp_img, manager]
+        ]
+        signature_table = Table(signature_data, colWidths=[80*mm, 40*mm, 50*mm])
+        signature_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+            ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('FONTNAME', (0, 0), (0, 0), PDF_FONT_BOLD),
+            ('FONTNAME', (2, 0), (2, 0), PDF_FONT_BOLD),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ]))
+    else:
+        signature_data = [
+            ['Операционный менеджер', manager]
+        ]
+        signature_table = Table(signature_data, colWidths=[120*mm, 50*mm])
+        signature_table.setStyle(TableStyle([
+            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+            ('FONTNAME', (0, 0), (-1, -1), PDF_FONT_BOLD),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+        ]))
     story.append(signature_table)
 
     doc.build(story)
