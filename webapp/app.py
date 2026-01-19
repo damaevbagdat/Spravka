@@ -512,10 +512,10 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     if manager == "Койбасова Е.Б." and stamp_path.exists():
         try:
             img = XLImage(str(stamp_path))
-            img.width = 120  # Ширина в пикселях
-            img.height = 120  # Высота в пикселях
-            # Позиционируем печать между "Операционный менеджер" и ФИО
-            img.anchor = f'B{row - 3}'
+            img.width = 130  # Ширина в пикселях
+            img.height = 130  # Высота в пикселях
+            # Позиционируем печать ближе к ФИО подписанта (накладывается сверху)
+            img.anchor = f'B{row - 1}'
             ws.add_image(img)
         except Exception as e:
             print(f"Предупреждение: не удалось добавить печать в Excel: {e}")
@@ -634,15 +634,16 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     use_stamp = False
     if manager == "Койбасова Е.Б." and stamp_path.exists():
         try:
-            # Создаем таблицу с печатью
-            stamp_img = RLImage(str(stamp_path), width=35*mm, height=35*mm)
+            # Создаем таблицу с печатью (печать накладывается ближе к ФИО)
+            stamp_img = RLImage(str(stamp_path), width=40*mm, height=40*mm)
             signature_data = [
                 ['Операционный менеджер', stamp_img, manager]
             ]
-            signature_table = Table(signature_data, colWidths=[80*mm, 40*mm, 50*mm])
+            # Уменьшаем среднюю колонку чтобы печать была ближе к ФИО
+            signature_table = Table(signature_data, colWidths=[85*mm, 30*mm, 55*mm])
             signature_table.setStyle(TableStyle([
                 ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-                ('ALIGN', (1, 0), (1, 0), 'CENTER'),
+                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),  # Печать прижата вправо к ФИО
                 ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
                 ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
                 ('FONTNAME', (0, 0), (0, 0), PDF_FONT_BOLD),
