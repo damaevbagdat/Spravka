@@ -546,14 +546,7 @@
                     </ul>
                     <div class="flex justify-between items-end mt-8 pt-4 border-t">
                         <span class="font-bold">Операционный менеджер</span>
-                        <div class="relative text-right">
-                            ${data.manager === 'Койбасова Е.Б.' ?
-                                `<img src="/static/Койбасова Е.Б..png"
-                                     alt="Печать и подпись"
-                                     class="absolute -bottom-6 -left-16 w-36 h-auto opacity-90"
-                                     style="mix-blend-mode: multiply; z-index: 10;">` : ''}
-                            <span class="font-bold relative z-0">${data.manager}</span>
-                        </div>
+                        <span class="font-bold">${data.manager}</span>
                     </div>
                 `;
 

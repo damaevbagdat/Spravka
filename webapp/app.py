@@ -24,14 +24,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "scripts"))
 
 from openpyxl import load_workbook, Workbook
 from openpyxl.styles import Font, Alignment, Border, Side, PatternFill
-from openpyxl.drawing.image import Image as XLImage
+# from openpyxl.drawing.image import Image as XLImage  # Не используется
 from openpyxl.cell.text import InlineFont
 from openpyxl.cell.rich_text import TextBlock, CellRichText
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image as RLImage
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
@@ -507,19 +507,6 @@ def create_excel_certificate(client: dict, report_date: str, manager: str, outpu
     ws[f'C{row}'].font = Font(bold=True)
     ws[f'C{row}'].alignment = Alignment(horizontal='right')
 
-    # Добавляем печать с подписью для Койбасова Е.Б.
-    stamp_path = STATIC_DIR / "Койбасова Е.Б..png"
-    if manager == "Койбасова Е.Б." and stamp_path.exists():
-        try:
-            img = XLImage(str(stamp_path))
-            img.width = 130  # Ширина в пикселях
-            img.height = 130  # Высота в пикселях
-            # Позиционируем печать ближе к ФИО подписанта (накладывается сверху)
-            img.anchor = f'B{row - 1}'
-            ws.add_image(img)
-        except Exception as e:
-            print(f"Предупреждение: не удалось добавить печать в Excel: {e}")
-
     wb.save(output_path)
     wb.close()
 
@@ -629,42 +616,16 @@ def create_pdf_certificate(client: dict, report_date: str, manager: str, output_
     story.append(Spacer(1, 100))  # Разрыв 10 строк перед подписью
 
     # Подпись (жирным шрифтом)
-    # Проверяем, нужно ли добавить печать с подписью
-    stamp_path = STATIC_DIR / "Койбасова Е.Б..png"
-    use_stamp = False
-    if manager == "Койбасова Е.Б." and stamp_path.exists():
-        try:
-            # Создаем таблицу с печатью (печать накладывается ближе к ФИО)
-            stamp_img = RLImage(str(stamp_path), width=40*mm, height=40*mm)
-            signature_data = [
-                ['Операционный менеджер', stamp_img, manager]
-            ]
-            # Уменьшаем среднюю колонку чтобы печать была ближе к ФИО
-            signature_table = Table(signature_data, colWidths=[85*mm, 30*mm, 55*mm])
-            signature_table.setStyle(TableStyle([
-                ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-                ('ALIGN', (1, 0), (1, 0), 'RIGHT'),  # Печать прижата вправо к ФИО
-                ('ALIGN', (2, 0), (2, 0), 'RIGHT'),
-                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-                ('FONTNAME', (0, 0), (0, 0), PDF_FONT_BOLD),
-                ('FONTNAME', (2, 0), (2, 0), PDF_FONT_BOLD),
-                ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ]))
-            use_stamp = True
-        except Exception as e:
-            print(f"Предупреждение: не удалось добавить печать в PDF: {e}")
-
-    if not use_stamp:
-        signature_data = [
-            ['Операционный менеджер', manager]
-        ]
-        signature_table = Table(signature_data, colWidths=[120*mm, 50*mm])
-        signature_table.setStyle(TableStyle([
-            ('ALIGN', (0, 0), (0, 0), 'LEFT'),
-            ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
-            ('FONTNAME', (0, 0), (-1, -1), PDF_FONT_BOLD),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-        ]))
+    signature_data = [
+        ['Операционный менеджер', manager]
+    ]
+    signature_table = Table(signature_data, colWidths=[120*mm, 50*mm])
+    signature_table.setStyle(TableStyle([
+        ('ALIGN', (0, 0), (0, 0), 'LEFT'),
+        ('ALIGN', (1, 0), (1, 0), 'RIGHT'),
+        ('FONTNAME', (0, 0), (-1, -1), PDF_FONT_BOLD),
+        ('FONTSIZE', (0, 0), (-1, -1), 10),
+    ]))
     story.append(signature_table)
 
     doc.build(story)
